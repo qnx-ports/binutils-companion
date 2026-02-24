@@ -1,0 +1,93 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=binutils
+pkgver=2.43
+pkgrel=0
+pkgdesc="Tools necessary to build programs"
+url="https://www.gnu.org/software/binutils/"
+depends="zlib-ng zstd-libs jansson"
+makedepends_build="bison flex texinfo zstd-dev jansson-dev"
+makedepends_host="zlib-ng-dev"
+arch="all"
+license="GPL-2.0-or-later AND LGPL-2.1-or-later AND BSD-3-Clause"
+subpackages="$pkgname-dev $pkgname-doc"
+source="https://mirror.csclub.uwaterloo.ca/gnu/binutils/binutils-$pkgver.tar.xz
+        0001.patch
+	0002.patch
+	0003.patch
+	0004.patch
+	0005.patch
+	0006.patch
+	0007.patch
+	0008.patch
+	0009.patch
+	0010.patch
+	"
+#TODO: id like to enable tests until we get it upstreamed
+options="!check"
+builddir="$srcdir/$pkgname-$pkgver"
+
+
+build() {
+    local _arch_configure=""
+
+    if [[ "$CARCH" == "aarch64" ]]; then
+        _arch_configure="--enable-fix-cortex-a53-843419 --enable-fix-cortex-a53-835769"
+    fi
+    # For some reason on arm the -fPIC is not passed to libtool with --with-pic so we just
+    # force it here in CFLAGS/CXXFLAGS
+    CFLAGS="${CFLAGS} -fPIC -O2 -D__QNXTARGET__ -Qunused-arguments" \
+    CXXFLAGS="${CXXFLAGS}-fPIC  -O2 -D__QNXTARGET__ -Qunused-arguments" \
+    ./configure \
+        --prefix=/usr \
+        --mandir=/usr/share/man \
+        --infodir=/usr/share/info \
+        --sysconfdir=/etc \
+        --with-lib-path=/usr/lib:/usr/local/lib \
+        --with-bugurl=https://github.com/qnx-ports/aports/issues \
+        --enable-plugins \
+        --disable-gdb \
+        --disable-gdbserver \
+        --disable-gprofng \
+        --disable-multilib \
+        --disable-nls \
+        --disable-werror \
+        --enable-64-bit-bfd \
+        --enable-colored-disassembly \
+        --enable-default-execstack=no \
+        --enable-default-hash-style=gnu \
+        --enable-deterministic-archives \
+        --enable-ld=default \
+        --enable-new-dtags \
+        --enable-relro \
+        --enable-threads \
+        --enable-shared \
+        --enable-install-libiberty \
+        --with-mmap \
+        --with-pic \
+        --with-system-zlib \
+        --with-zstd \
+        --enable-jansson \
+	$_arch_configure
+
+    make
+}
+
+
+package() {
+	make tooldir="/usr" install DESTDIR="$pkgdir"
+}
+
+
+sha512sums="
+93e063163e54d6a6ee2bd48dc754270bf757a3635b49a702ed6b310e929e94063958512d191e66beaf44275f7ea60865dbde138b624626739679fcc306b133bb  binutils-2.43.tar.xz
+f3146e5423c825d251ff66507910a960493b862b193be6980c1688a82e3fe588e3a93f0d83484107419cb29f5eacdc0b9b53cef498af8208c71ae22c508661b1  0001.patch
+6a567e90802cd6beffe29248fe9a7e8f36ef84a95965bde66f196782edfa59c14c449b7e03b5e6c43848d24f8bf5cae47ed37acc1f12d1da316273dc135ec07b  0002.patch
+98a4a65cef8315b17cb7ea591bbda5f813fb2e0c67b8ae48ef583143f505d01020a30f74f64a2e8b4dd62ac5e1f83dc32c1e0e531b34d93f19d84f8c22a1e2cd  0003.patch
+37532c6d71e28a729429493a83ebf4a6a3e15625b49543a06d8e4478b12eafa186514fb9f282cf28337cd570ca8230c914a311237a832472c3ca4f5fc4effd19  0004.patch
+4a5082f9c2f237b5046e57f33d64ee8e202195371dac3557014b8a5de5aa6dd4693591855dba6e4622bb716e80ac36e048244a9e52deed35da257a2a59a45744  0005.patch
+83d2ad84615fe72180005824f1f946524594c058774550a89f73b133edff630d2890954eb01462152659b9cbfccc5b893a91705513a7b69b67bbefb33b1b3168  0006.patch
+13467c4c2ebc3adcb8dd147b681384ff295881fc1ca4c0805f18bfb84e20c68833a8d236ea77114921ad69532031c682269d8c69d152edb3d857462d9c16f9b7  0007.patch
+de10accaa616a23ae3fbf7567836f056d633a7b02d29aee48565c6f85dc0c669f3724e04f981fcffd180545442af33d11986197dd82230b5faea04a15c2ac0c8  0008.patch
+f03fdb120792c778a40464af66aa44c0b82fe7fda54fa049aaf8de6c367331d4398820a7729f9984089e853619fc9d250bfc40569863c4a02c4e27feef49b784  0009.patch
+1b22f972764b4b813a514d844f9d5ca8bff5a87eacec915c31cd3654d929a6e8954cb3b6b626c5acabc1477e319f64f11724de34125e322c518a9ef8853cf8c6  0010.patch
+"
