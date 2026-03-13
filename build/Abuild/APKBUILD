@@ -1,7 +1,7 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=binutils
 pkgver=2.43
-pkgrel=0
+pkgrel=${pkgrel:-0}
 pkgdesc="Tools necessary to build programs"
 url="https://www.gnu.org/software/binutils/"
 depends="zlib-ng zstd-libs jansson"
@@ -78,6 +78,7 @@ package() {
 }
 
 
+options="$options ${DISABLE_CHECK:+!check}"
 sha512sums="
 93e063163e54d6a6ee2bd48dc754270bf757a3635b49a702ed6b310e929e94063958512d191e66beaf44275f7ea60865dbde138b624626739679fcc306b133bb  binutils-2.43.tar.xz
 f3146e5423c825d251ff66507910a960493b862b193be6980c1688a82e3fe588e3a93f0d83484107419cb29f5eacdc0b9b53cef498af8208c71ae22c508661b1  0001.patch
